@@ -1,0 +1,12 @@
+h1{
+  color:rgba(168, 4, 4, 0.947);
+  font-size: 30px;
+  font-family:'Times New Roman', Times, serif;
+  text-align: center;
+}
+menu{
+  display: flex;
+  align-items: flex;
+  gap: 20px;
+  text-align:right;
+}
