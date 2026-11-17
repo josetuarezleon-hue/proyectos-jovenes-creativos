@@ -536,3 +536,6 @@ document.addEventListener("DOMContentLoaded", () => {
     actualizarEstadoCuenta();
     renderizarAdministracion();
 });
+module.export = {
+    actualizarEstadoCuenta, actualizarPresupuesto, actualizarTotales, calcularTotales, contactos, crearElemento, fechaActual, formatoDinero, guardarDatos, leerDatos
+}
