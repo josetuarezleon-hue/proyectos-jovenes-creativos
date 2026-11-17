@@ -1,0 +1,489 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Balancea360: organiza tus finanzas, controla tus gastos y alcanza tus metas.">
+
+    <title>Balancea360 | Gestión financiera</title>
+
+    <link rel="stylesheet" href="./style.css">
+    <script src="./calculos.js" defer></script>
+</head>
+
+<body>
+
+    <!-- ENCABEZADO -->
+    <header>
+        <nav class="navbar">
+            <a href="#inicio" class="logo">Balancea<span>360</span></a>
+
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#finanzas">Mis finanzas</a></li>
+                <li><a href="#servicios">Servicios</a></li>
+                <li><a href="#asistente">Asistente financiero</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+
+            <div class="nav-buttons">
+                <a href="#login" class="btn-login">Iniciar sesión</a>
+                <a href="#registro" class="btn-register">Registrarse</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- INICIO -->
+        <section id="inicio" class="hero">
+            <div class="hero-content">
+                <h1>Controla tus finanzas, construye tu futuro</h1>
+
+                <p>
+                    Balancea360 te ayuda a organizar tus ingresos,
+                    controlar tus gastos y planificar tus metas
+                    financieras desde un solo lugar.
+                </p>
+
+                <a href="#finanzas" class="btn-primary">
+                    Comenzar ahora
+                </a>
+            </div>
+        </section>
+
+        <!-- FINANZAS -->
+        <section id="finanzas" class="section">
+            <div class="section-header">
+                <h2>Mi gestión financiera</h2>
+                <p>Visualiza y administra tus movimientos económicos.</p>
+            </div>
+
+            <!-- RESUMEN FINANCIERO -->
+            <div class="finance-summary">
+
+                <div class="summary-card">
+                    <h3>Ingresos</h3>
+                    <p id="total-ingresos">$0.00</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Gastos</h3>
+                    <p id="total-gastos">$0.00</p>
+                </div>
+
+                <div class="summary-card">
+                    <h3>Balance disponible</h3>
+                    <p id="balance-total">$0.00</p>
+                </div>
+
+            </div>
+
+            <!-- FORMULARIO DE MOVIMIENTOS -->
+            <div class="content-card">
+                <h3>Registrar movimiento</h3>
+
+                <form id="form-movimiento">
+
+                    <div class="form-group">
+                        <label for="tipo-movimiento">Tipo de movimiento</label>
+
+                        <select id="tipo-movimiento" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="ingreso">Ingreso</option>
+                            <option value="gasto">Gasto</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="concepto">Concepto</label>
+
+                        <input
+                            type="text"
+                            id="concepto"
+                            placeholder="Ej. Alimentación"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categoria">Categoría</label>
+
+                        <select id="categoria" required>
+                            <option value="">Selecciona una categoría</option>
+                            <option value="Alimentación">Alimentación</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Educación">Educación</option>
+                            <option value="Salud">Salud</option>
+                            <option value="Vivienda">Vivienda</option>
+                            <option value="Entretenimiento">Entretenimiento</option>
+                            <option value="Salario">Salario</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="monto">Monto ($)</label>
+
+                        <input
+                            type="number"
+                            id="monto"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fecha-movimiento">Fecha</label>
+
+                        <input
+                            type="date"
+                            id="fecha-movimiento"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        Registrar movimiento
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- HISTORIAL -->
+            <div class="content-card">
+                <h3>Historial de movimientos</h3>
+
+                <div class="filters">
+                    <div class="form-group">
+                        <label for="filtro-tipo">Filtrar por tipo</label>
+
+                        <select id="filtro-tipo">
+                            <option value="todos">Todos</option>
+                            <option value="ingreso">Ingresos</option>
+                            <option value="gasto">Gastos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filtro-mes">Filtrar por mes</label>
+
+                        <input type="month" id="filtro-mes">
+                    </div>
+                </div>
+
+                <div id="lista-movimientos">
+                    <p>Aún no tienes movimientos registrados.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SERVICIOS -->
+        <section id="servicios" class="section">
+            <div class="section-header">
+                <h2>Nuestros servicios</h2>
+
+                <p>
+                    Herramientas para mejorar tu organización
+                    y planificación financiera.
+                </p>
+            </div>
+
+            <div id="catalogo-servicios" class="services-grid">
+                <!-- Los servicios se cargarán mediante JavaScript -->
+            </div>
+        </section>
+
+        <!-- ASISTENTE FINANCIERO -->
+        <section id="asistente" class="section">
+            <div class="section-header">
+                <h2>Asistente financiero</h2>
+
+                <p>
+                    Obtén una orientación inicial para organizar
+                    tus ingresos, gastos y objetivos.
+                </p>
+            </div>
+
+            <div class="content-card">
+                <form id="form-asistente">
+
+                    <div class="form-group">
+                        <label for="ia-ingresos">Ingresos mensuales ($)</label>
+
+                        <input
+                            type="number"
+                            id="ia-ingresos"
+                            min="0"
+                            step="0.01"
+                            placeholder="Ej. 600"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ia-gastos">Gastos mensuales ($)</label>
+
+                        <input
+                            type="number"
+                            id="ia-gastos"
+                            min="0"
+                            step="0.01"
+                            placeholder="Ej. 350"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ia-objetivo">¿Cuál es tu objetivo financiero?</label>
+
+                        <textarea
+                            id="ia-objetivo"
+                            placeholder="Ej. Ahorrar para comprar una computadora..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        Generar orientación
+                    </button>
+
+                </form>
+
+                <div id="respuesta-asistente" aria-live="polite">
+                    <!-- Aquí aparecerá la respuesta -->
+                </div>
+            </div>
+        </section>
+
+        <!-- REGISTRO -->
+        <section id="registro" class="section">
+            <div class="section-header">
+                <h2>Crea tu cuenta</h2>
+                <p>Regístrate para comenzar a organizar tus finanzas.</p>
+            </div>
+
+            <div class="content-card">
+                <form id="form-registro">
+
+                    <div class="form-group">
+                        <label for="registro-nombre">Nombre completo</label>
+
+                        <input
+                            type="text"
+                            id="registro-nombre"
+                            placeholder="Tu nombre"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registro-email">Correo electrónico</label>
+
+                        <input
+                            type="email"
+                            id="registro-email"
+                            placeholder="correo@ejemplo.com"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registro-password">Contraseña</label>
+
+                        <input
+                            type="password"
+                            id="registro-password"
+                            placeholder="Crea una contraseña"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        Registrarme
+                    </button>
+
+                    <p id="mensaje-registro" aria-live="polite"></p>
+
+                </form>
+            </div>
+        </section>
+
+        <!-- INICIO DE SESIÓN -->
+        <section id="login" class="section">
+            <div class="section-header">
+                <h2>Iniciar sesión</h2>
+                <p>Accede a tu espacio financiero.</p>
+            </div>
+
+            <div class="content-card">
+                <form id="form-login">
+
+                    <div class="form-group">
+                        <label for="login-email">Correo electrónico</label>
+
+                        <input
+                            type="email"
+                            id="login-email"
+                            placeholder="correo@ejemplo.com"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Contraseña</label>
+
+                        <input
+                            type="password"
+                            id="login-password"
+                            placeholder="Tu contraseña"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        Entrar
+                    </button>
+
+                    <button
+                        type="button"
+                        id="btn-recuperar-password"
+                        class="btn-secondary"
+                    >
+                        Recuperar contraseña
+                    </button>
+
+                    <p id="mensaje-login" aria-live="polite"></p>
+
+                </form>
+
+                <div id="estado-cuenta"></div>
+
+                <button
+                    type="button"
+                    id="btn-cerrar-sesion"
+                    class="btn-secondary"
+                >
+                    Cerrar sesión
+                </button>
+            </div>
+        </section>
+
+        <!-- ADMINISTRACIÓN -->
+        <section id="administracion" class="section">
+            <div class="section-header">
+                <h2>Panel de administración</h2>
+                <p>Área de gestión administrativa.</p>
+            </div>
+
+            <div id="panel-admin" class="content-card">
+
+                <div class="finance-summary">
+                    <div class="summary-card">
+                        <h3>Total de contactos</h3>
+                        <p id="admin-total-contactos">0</p>
+                    </div>
+
+                    <div class="summary-card">
+                        <h3>Total de servicios</h3>
+                        <p id="admin-total-servicios">0</p>
+                    </div>
+                </div>
+
+                <div id="admin-contenido">
+                    <!-- Contenido administrativo -->
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CONTACTO -->
+        <section id="contacto" class="section">
+            <div class="section-header">
+                <h2>Contáctanos</h2>
+
+                <p>
+                    ¿Tienes alguna pregunta o sugerencia?
+                    Nos gustaría escucharte.
+                </p>
+            </div>
+
+            <div class="content-card">
+                <form id="form-contacto">
+
+                    <div class="form-group">
+                        <label for="contacto-nombre">Nombre</label>
+
+                        <input
+                            type="text"
+                            id="contacto-nombre"
+                            placeholder="Tu nombre"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contacto-email">Correo electrónico</label>
+
+                        <input
+                            type="email"
+                            id="contacto-email"
+                            placeholder="correo@ejemplo.com"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contacto-asunto">Asunto</label>
+
+                        <input
+                            type="text"
+                            id="contacto-asunto"
+                            placeholder="Motivo del mensaje"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contacto-mensaje">Mensaje</label>
+
+                        <textarea
+                            id="contacto-mensaje"
+                            placeholder="Escribe tu mensaje..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        Enviar mensaje
+                    </button>
+
+                    <p id="mensaje-contacto" aria-live="polite"></p>
+
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="footer">
+        <div class="footer-content">
+            <a href="#inicio" class="logo">Balancea<span>360</span></a>
+
+            <p>
+                Organiza tus finanzas hoy y construye
+                un mejor futuro.
+            </p>
+
+            <p>
+                © 2026 Balancea360. Todos los derechos reservados.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
