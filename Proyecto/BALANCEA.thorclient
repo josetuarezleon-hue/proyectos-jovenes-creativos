@@ -2,7 +2,7 @@
   "readme": "To open this file inside VSCode, you need to install Thor Client extension https://thorclient.com/",
   "request": {
     "url": {
-      "raw": "",
+      "raw": "http://localhost:3000/api/health",
       "query": []
     }
   },
