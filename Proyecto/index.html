@@ -37,7 +37,13 @@
                 <a href="acceso.html?modo=registro" id="enlace-registro" class="btn btn-primary">
                     Registrarse
                 </a>
-
+                <a
+                    href="admin.html"
+                    id="enlace-admin"
+                    class="btn btn-primary"
+                    hidden>
+                    Panel administrativo
+                </a>
                 <span id="usuario-header" hidden></span>
 
                 <button type="button" id="btn-cerrar-sesion" class="btn btn-outline" hidden>
@@ -193,59 +199,62 @@
                     <article class="panel">
                         <h3>Registrar movimiento</h3>
 
-                        <form id="form-movimiento">
+                        
+<form id="form-movimiento">
 
-                            <div class="form-group">
-                                <label for="tipo-movimiento">
-                                    Tipo de movimiento
-                                </label>
-                                <select id="tipo-movimiento" name="tipo" required>
-                                    <option value="gasto">Gasto</option>
-                                    <option value="ingreso">Ingreso</option>
-                                </select>
-                            </div>
+    <div class="form-group">
+        <label for="tipo-movimiento">Tipo de movimiento</label>
+        <select id="tipo-movimiento" required>
+            <option value="">Selecciona una opción</option>
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+        </select>
+    </div>
 
-                            <div class="form-group">
-                                <label for="concepto">Concepto</label>
-                                <input type="text" id="concepto" name="concepto" placeholder="Ej. Transporte, sueldo..."
-                                    maxlength="100" required>
-                            </div>
+    <div class="form-group" id="detalle-gasto" hidden>
+        <label for="categoria">¿En qué gastaste?</label>
+        <select id="categoria">
+            <option value="">Selecciona una categoría</option>
+            <option value="Alimentación">Alimentación</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Educación">Educación</option>
+            <option value="Salud">Salud</option>
+            <option value="Vivienda">Vivienda</option>
+            <option value="Entretenimiento">Entretenimiento</option>
+            <option value="Compras">Compras</option>
+            <option value="Otros">Otros</option>
+        </select>
+    </div>
 
-                            <div class="form-group">
-                                <label for="categoria">Categoría</label>
-                                <select id="categoria" name="categoria" required>
-                                    <option value="Alimentación">Alimentación</option>
-                                    <option value="Transporte">Transporte</option>
-                                    <option value="Vivienda">Vivienda</option>
-                                    <option value="Educación">Educación</option>
-                                    <option value="Salud">Salud</option>
-                                    <option value="Entretenimiento">Entretenimiento</option>
-                                    <option value="Compras">Compras</option>
-                                    <option value="Servicios">Servicios</option>
-                                    <option value="Salario">Salario</option>
-                                    <option value="Otros">Otros</option>
-                                </select>
-                            </div>
+    <div class="form-group">
+        <label for="monto">Monto ($)</label>
+        <input
+            type="number"
+            id="monto"
+            min="0.01"
+            step="0.01"
+            placeholder="0.00"
+            required
+        >
+    </div>
 
-                            <div class="form-group">
-                                <label for="monto">Monto ($)</label>
-                                <input type="number" id="monto" name="monto" placeholder="0.00" min="0.01"
-                                    max="100000000" step="0.01" required>
-                            </div>
+    <div class="form-group">
+        <label for="fecha-movimiento">Fecha</label>
+        <input
+            type="date"
+            id="fecha-movimiento"
+            required
+        >
+    </div>
 
-                            <div class="form-group">
-                                <label for="fecha-movimiento">Fecha</label>
-                                <input type="date" id="fecha-movimiento" name="fecha" required>
-                            </div>
 
-                            <button type="submit" class="btn btn-primary btn-full">
-                                Guardar movimiento
-                            </button>
+<button type="submit" class="btn btn-primary">
+    Registrar movimiento
+</button>
 
-                            <p id="mensaje-movimiento" class="form-message" role="status"></p>
 
-                        </form>
-                    </article>
+</form>
+</article>
 
                     <!-- HISTORIAL -->
                     <article class="panel">
@@ -300,56 +309,75 @@
         </section>
 
         <!-- CATÁLOGO DE SERVICIOS -->
-        <section id="servicios" class="section">
-            <div class="container">
+        
+<!-- CATÁLOGO DE SERVICIOS -->
+<section id="servicios" class="section">
+    <div class="container">
 
-                <div class="section-heading">
-                    <p class="eyebrow">HERRAMIENTAS FINANCIERAS</p>
-                    <h2>Servicios para tus objetivos</h2>
-                    <p>
-                        Explora recursos para mejorar la organización
-                        y el seguimiento de tus finanzas.
-                    </p>
-                </div>
+        <div class="section-heading">
+            <p class="eyebrow">CRECE FINANCIERAMENTE</p>
+            <h2>Herramientas para mejorar tu futuro</h2>
+            <p>
+                Aprende a administrar tu dinero, ahorrar e invertir
+                con decisiones financieras más inteligentes.
+            </p>
+        </div>
 
-                <div id="catalogo-servicios" class="services-grid">
+        <div id="catalogo-servicios" class="services-grid">
 
-                    <article class="service-card">
-                        <span class="service-label">ORGANIZACIÓN</span>
-                        <h3>Planificación mensual</h3>
-                        <p>
-                            Distribuye tus ingresos entre gastos esenciales,
-                            compromisos y objetivos personales.
-                        </p>
-                        <a href="#presupuesto">Explorar presupuesto →</a>
-                    </article>
+            <article class="service-card">
+                <span class="service-label">ORGANIZACIÓN</span>
+                <h3>Control de gastos</h3>
+                <p>
+                    Identifica en qué gastas tu dinero y descubre
+                    oportunidades para reducir gastos innecesarios.
+                </p>
+                <a href="#presupuesto">Organizar mis gastos →</a>
+            </article>
 
-                    <article class="service-card">
-                        <span class="service-label">AHORRO</span>
-                        <h3>Metas financieras</h3>
-                        <p>
-                            Establece objetivos y haz seguimiento de la
-                            cantidad que deseas ahorrar.
-                        </p>
-                        <a href="acceso.html?modo=registro">
-                            Crear una cuenta →
-                        </a>
-                    </article>
+            <article class="service-card">
+                <span class="service-label">AHORRO</span>
+                <h3>Plan de ahorro</h3>
+                <p>
+                    Establece objetivos, organiza tus ahorros
+                    y trabaja para alcanzar tus metas.
+                </p>
+                <a href="#presupuesto">Comenzar a ahorrar →</a>
+            </article>
 
-                    <article class="service-card">
-                        <span class="service-label">AUTOMATIZACIÓN</span>
-                        <h3>Asistencia financiera</h3>
-                        <p>
-                            Recibe ideas basadas en los ingresos,
-                            los gastos y tus objetivos.
-                        </p>
-                        <a href="#asistente">Consultar asistente →</a>
-                    </article>
+            <article class="service-card">
+                <span class="service-label">APRENDIZAJE</span>
+                <h3>Educación financiera</h3>
+                <p>
+                    Aprende a elaborar presupuestos, controlar
+                    tus gastos y tomar mejores decisiones.
+                </p>
+                <a href="#asistente">Aprender más →</a>
+            </article>
 
-                </div>
+            <article class="service-card">
+                <span class="service-label">INVERSIÓN</span>
+                <h3>Aprende a invertir</h3>
+                <p>
+                    Conoce los conceptos básicos, las alternativas
+                    y los riesgos antes de invertir tu dinero.
+                </p>
+                <a href="#asistente">Consultar al asistente →</a>
+            </article>
 
-            </div>
-        </section>
+            <article class="service-card">
+                <span class="service-label">PLANIFICACIÓN</span>
+                <h3>Planificación financiera</h3>
+                <p>
+                    Organiza tus ingresos, gastos y objetivos
+                    para construir un futuro financiero estable.
+                </p>
+                <a href="#presupuesto">Ver mi presupuesto →</a>
+            </article>
+
+        </div>
+    </div>
+</section>
 
         <!-- ASISTENTE DE IA -->
         <section id="asistente" class="section assistant-section">

@@ -809,6 +809,14 @@ tbody td[colspan] {
    CATÁLOGO DE SERVICIOS
    ========================================= */
 
+/* =========================================
+   CATÁLOGO DE SERVICIOS
+========================================= */
+
+#servicios {
+    background: #f0f7f2;
+}
+
 .services-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -816,6 +824,7 @@ tbody td[colspan] {
 }
 
 .service-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -823,56 +832,77 @@ tbody td[colspan] {
     min-height: 290px;
     padding: 30px;
 
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    background: #ffffff;
+    border: 1px solid #dce9df;
+    border-radius: 18px;
 
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease;
+    box-shadow: 0 5px 18px rgba(18, 43, 37, 0.05);
+
+    transition: all 0.25s ease;
 }
 
 .service-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(22, 132, 91, 0.4);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-7px);
+    border-color: #16845b;
+    box-shadow: 0 14px 30px rgba(18, 43, 37, 0.12);
 }
 
 .service-label {
     display: inline-block;
     margin-bottom: 22px;
-    padding: 6px 10px;
+    padding: 7px 12px;
 
-    background: var(--primary-light);
-    color: var(--primary-dark);
+    background: #e5f5ed;
+    color: #106747;
 
-    border-radius: 5px;
+    border-radius: 20px;
 
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.07em;
 }
 
 .service-card h3 {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    color: #122b25;
+    font-size: 1.25rem;
 }
 
 .service-card p {
-    margin-bottom: 24px;
+    margin-bottom: 25px;
+    color: #68766e;
     line-height: 1.8;
 }
 
 .service-card a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
     margin-top: auto;
-    color: var(--primary);
+
+    color: #16845b;
     font-weight: 750;
+
+    transition: color 0.2s ease;
 }
 
 .service-card a:hover {
-    color: var(--primary-dark);
+    color: #106747;
+    text-decoration: underline;
 }
 
+/* Distribución de las cinco tarjetas */
+
+@media (min-width: 769px) {
+    .service-card:nth-child(4) {
+        grid-column: 1 / 2;
+    }
+
+    .service-card:nth-child(5) {
+        grid-column: 2 / 3;
+    }
+}
 
 /* =========================================
    ASISTENTE FINANCIERO
@@ -1006,213 +1036,272 @@ tbody td[colspan] {
    PANEL DE ADMINISTRACIÓN
    ========================================= */
 
-.admin-section {
-    background: var(--background);
-}
-
-.admin-notice {
-    max-width: 760px;
-    margin-inline: auto;
-    padding: 32px;
-
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--primary);
-    border-radius: var(--radius-md);
-
-    box-shadow: var(--shadow-sm);
-}
-
-.admin-notice h3 {
-    margin-bottom: 12px;
-}
-
-.admin-notice p {
-    margin-bottom: 22px;
-    line-height: 1.8;
-}
-
-.admin-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-    margin-top: 24px;
-}
-
-
 /* =========================================
-   CONTACTO
-   ========================================= */
+   PANEL ADMINISTRATIVO BALANCEA360
+========================================= */
 
-.contact-section {
-    background: var(--surface);
+.admin-page {
+    background: #f4f7f5;
 }
 
-.contact-layout {
-    display: grid;
-    grid-template-columns: 0.8fr 1fr;
-    align-items: start;
-    gap: 80px;
+.admin-main {
+    padding-top: 55px;
+    padding-bottom: 60px;
 }
 
-.contact-layout > div {
-    padding-top: 12px;
+.admin-welcome {
+    padding: 38px;
+    margin-bottom: 30px;
+    color: white;
+    background: linear-gradient(135deg, #123c30, #198754);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(22, 59, 50, 0.15);
 }
 
-.contact-layout h2 {
-    margin-bottom: 20px;
+.admin-welcome .eyebrow {
+    color: #bbf7d0;
+    font-weight: 700;
+    letter-spacing: 2px;
 }
 
-.contact-layout > div > p {
-    margin-bottom: 20px;
-    line-height: 1.85;
+.admin-welcome h1 {
+    color: white;
+    font-size: 2.2rem;
+    margin: 10px 0;
 }
 
-.contact-layout > div > p a {
-    color: var(--primary);
-    font-weight: 650;
-    overflow-wrap: anywhere;
-}
-
-.contact-layout > div > small {
-    display: block;
-    color: var(--text-light);
+.admin-welcome p {
+    max-width: 650px;
+    color: #e2f5e9;
     line-height: 1.7;
 }
 
-.contact-layout .panel {
-    box-shadow: var(--shadow-md);
+/* Tarjetas de estadísticas */
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    margin-bottom: 35px;
 }
 
-
-/* =========================================
-   PIE DE PÁGINA
-   ========================================= */
-
-.footer {
-    padding: 35px 0;
-    background: var(--secondary);
+.admin-stat-card {
+    padding: 25px;
+    background: white;
+    border: 1px solid #e2e8e0;
+    border-radius: 17px;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.footer-content {
+.admin-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.09);
+}
+
+.admin-stat-icon {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+.admin-stat-card h3 {
+    color: #475569;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.admin-stat-card p {
+    color: #15803d;
+    font-size: 2.3rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.admin-stat-card span {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+/* Contenedor de información */
+
+.admin-information {
+    padding: 28px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.05);
+}
+
+.admin-information-heading {
+    margin-bottom: 25px;
+}
+
+.admin-information-heading h2 {
+    color: #163b32;
+    margin: 8px 0;
+}
+
+.admin-information-heading p {
+    color: #64748b;
+}
+
+/* Secciones de usuarios, contactos y movimientos */
+
+#admin-contenido {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 18px;
+    flex-direction: column;
+    gap: 28px;
 }
 
-.footer .logo {
+#admin-contenido .admin-section {
+    padding: 24px;
+    margin-top: 0;
+    background: #ffffff;
+    border: 1px solid #dfe7e1;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+#admin-contenido .admin-section-heading {
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#admin-contenido .admin-section-heading h2 {
+    color: #163b32;
+    font-size: 1.25rem;
+    margin-bottom: 7px;
+}
+
+#admin-contenido .admin-section-heading p {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Tablas administrativas */
+
+#admin-contenido .admin-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+#admin-contenido .admin-table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+    background: white;
+}
+
+#admin-contenido .admin-table th {
+    padding: 16px;
     color: #ffffff;
+    background: #14532d;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
 }
 
-.footer .logo span {
-    color: var(--accent);
+#admin-contenido .admin-table td {
+    padding: 15px 16px;
+    color: #475569;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    border-bottom: 1px solid #edf0f2;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
 }
 
-.footer p {
-    color: #b8c9bf;
-    font-size: 0.84rem;
+#admin-contenido .admin-table tbody tr:hover {
+    background: #f0fdf4;
 }
 
-
-/* =========================================
-   ESTADOS DE CARGA Y MENSAJES
-   ========================================= */
-
-.is-loading {
-    opacity: 0.7;
-    pointer-events: none;
+#admin-contenido .admin-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
-.status-success {
-    color: var(--success);
-}
-
-.status-error {
-    color: var(--danger);
-}
-
-.status-warning {
-    color: var(--warning);
-}
-
-.text-income {
-    color: var(--success);
-    font-weight: 750;
-}
-
-.text-expense {
-    color: var(--danger);
-    font-weight: 750;
-}
-
-.empty-state {
+#admin-contenido .admin-table td.admin-empty {
     padding: 30px;
-    color: var(--text-light);
+    color: #64748b;
     text-align: center;
 }
 
+/* Adaptación a pantallas pequeñas */
 
-/* =========================================
-   DISEÑO RESPONSIVE: TABLETS
-   ========================================= */
-
-@media (max-width: 1050px) {
-    .header-content {
-        flex-wrap: wrap;
-        justify-content: space-between;
-        padding-top: 15px;
-        padding-bottom: 15px;
+@media (max-width: 768px) {
+    .admin-main {
+        padding-top: 30px;
     }
 
-    .navigation {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 12px 22px;
+    .admin-welcome {
+        padding: 25px;
     }
 
-    .hero-content {
-        gap: 40px;
+    .admin-welcome h1 {
+        font-size: 1.7rem;
     }
 
-    .assistant-layout,
-    .contact-layout {
-        gap: 40px;
+    .admin-stats {
+        grid-template-columns: 1fr;
     }
 
-    .filters {
-        grid-template-columns: 1fr 1fr;
+    .admin-information {
+        padding: 17px;
+    }
+
+    #admin-contenido .admin-section {
+        padding: 16px;
+    }
+
+    #admin-contenido .admin-section-heading h2 {
+        font-size: 1.1rem;
+    }
+
+    #admin-contenido .admin-table th,
+    #admin-contenido .admin-table td {
+        padding: 12px;
+        font-size: 0.8rem;
     }
 }
 
-@media (max-width: 800px) {
-    .section {
-        padding: 68px 0;
-    }
+/* =========================================
+   DISEÑO RESPONSIVE - BALANCEA360
+========================================= */
 
-    .hero {
-        padding: 75px 0;
+/* TABLETS */
+@media (max-width: 900px) {
+
+    .container {
+        width: min(100% - 36px, var(--container-width));
     }
 
     .hero-content {
-        grid-template-columns: 1fr;
-        gap: 42px;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
     }
 
-    .hero-text {
-        max-width: 680px;
+    .assistant-layout {
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
     }
 
-    .hero-card {
-        max-width: 560px;
-        width: 100%;
+    .feature-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .feature-grid,
     .services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .service-card:nth-child(4),
+    .service-card:nth-child(5) {
+        grid-column: auto;
+    }
+
+    .dashboard-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -1220,55 +1309,49 @@ tbody td[colspan] {
         grid-template-columns: 1fr;
     }
 
-    .assistant-layout,
-    .contact-layout {
-        grid-template-columns: 1fr;
-        gap: 32px;
+    .navigation {
+        gap: 14px;
     }
 
-    .assistant-layout > div,
-    .contact-layout > div {
-        max-width: 650px;
-    }
-
-    .access-grid {
-        gap: 18px;
-    }
-
-    .panel {
-        padding: 23px;
-    }
-
-    .footer-content {
-        justify-content: center;
-        text-align: center;
+    .navigation a {
+        font-size: 0.82rem;
     }
 }
 
 
-/* =========================================
-   DISEÑO RESPONSIVE: CELULARES
-   ========================================= */
+/* CELULARES */
+@media (max-width: 768px) {
 
-@media (max-width: 560px) {
-    body {
-        font-size: 14px;
+    .section {
+        padding: 60px 0;
     }
 
     .container {
-        width: calc(100% - 30px);
+        width: calc(100% - 32px);
     }
 
-    .section {
-        padding: 54px 0;
-    }
+    /* Encabezado */
 
     .header-content {
-        gap: 13px;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 0;
     }
 
     .logo {
         font-size: 1.35rem;
+    }
+
+    .navigation {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+    }
+
+    .navigation a {
+        font-size: 0.82rem;
     }
 
     .header-actions {
@@ -1281,80 +1364,70 @@ tbody td[colspan] {
         font-size: 0.76rem;
     }
 
-    .navigation {
-        justify-content: flex-start;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-
-        padding: 4px 0 8px;
-        scrollbar-width: thin;
-    }
-
-    .navigation a {
-        flex-shrink: 0;
-        font-size: 0.82rem;
-    }
+    /* Portada */
 
     .hero {
-        padding: 55px 0;
+        padding: 65px 0;
     }
 
-    h1 {
-        font-size: clamp(2.2rem, 10vw, 3.2rem);
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: 35px;
     }
 
-    h2 {
-        font-size: 1.85rem;
+    .hero-text h1 {
+        font-size: clamp(2.2rem, 9vw, 3.2rem);
     }
 
     .hero-text > p:not(.eyebrow) {
-        font-size: 0.98rem;
-    }
-
-    .hero-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .hero-actions .btn {
-        width: 100%;
+        font-size: 1rem;
     }
 
     .hero-card {
-        padding: 23px;
+        padding: 24px;
     }
 
     .hero-card h2 {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
     }
 
+    /* Títulos */
+
+    .section-heading {
+        margin-bottom: 32px;
+    }
+
+    .section-heading h2 {
+        font-size: 1.8rem;
+    }
+
+    /* Características y servicios */
+
     .feature-grid,
-    .services-grid,
-    .dashboard-grid,
-    .access-grid,
-    .admin-grid {
+    .services-grid {
         grid-template-columns: 1fr;
     }
 
     .feature-card,
     .service-card {
+        min-height: auto;
         padding: 24px;
     }
 
-    .service-card {
-        min-height: auto;
+    .service-card:nth-child(4),
+    .service-card:nth-child(5) {
+        grid-column: auto;
     }
 
+    /* Presupuesto */
+
     .dashboard-grid {
-        gap: 12px;
+        grid-template-columns: 1fr;
+        gap: 14px;
     }
 
     .dashboard-card {
         padding: 20px;
-    }
-
-    .dashboard-card h3 {
-        font-size: 1.65rem;
     }
 
     .panel {
@@ -1363,71 +1436,144 @@ tbody td[colspan] {
 
     .panel-heading {
         align-items: flex-start;
-        flex-direction: column;
     }
+
+    /* Filtros */
 
     .filters {
         grid-template-columns: 1fr;
-        gap: 7px;
+        gap: 8px;
     }
 
-    .filters label {
-        margin-top: 6px;
-    }
-
-    .table-wrapper {
-        margin-inline: 0;
-    }
+    /* Asistente */
 
     .assistant-layout {
-        gap: 26px;
+        grid-template-columns: 1fr;
+        gap: 30px;
     }
 
-    .contact-layout {
-        gap: 24px;
+    /* Acceso y registro */
+
+    .access-grid {
+        grid-template-columns: 1fr;
     }
 
-    .admin-notice {
-        padding: 23px;
+    .access-grid .panel {
+        height: auto;
     }
 
-    .footer-content {
+    /* Botones */
+
+    .hero-actions {
         flex-direction: column;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+    }
+}
+
+
+/* CELULARES PEQUEÑOS */
+@media (max-width: 480px) {
+
+    body {
+        font-size: 14px;
+    }
+
+    .container {
+        width: calc(100% - 24px);
+    }
+
+    .section {
+        padding: 48px 0;
+    }
+
+    .header-content {
         gap: 10px;
     }
-}
 
-
-/* =========================================
-   ACCESIBILIDAD: MOVIMIENTO REDUCIDO
-   ========================================= */
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
+    .logo {
+        font-size: 1.2rem;
     }
-    [hidden] {
-    display: none !important;
+
+    .header-actions {
+        flex-wrap: wrap;
+    }
+
+    .header-actions .btn {
+        padding: 7px 9px;
+        font-size: 0.7rem;
+    }
+
+    .navigation {
+        gap: 9px 13px;
+    }
+
+    .navigation a {
+        font-size: 0.76rem;
+    }
+
+    .hero {
+        padding: 48px 0;
+    }
+
+    .hero-card {
+        padding: 20px;
+    }
+
+    .budget-details {
+        gap: 12px;
+    }
+
+    .budget-details strong {
+        font-size: 1rem;
+    }
+
+    .panel {
+        padding: 16px;
+    }
+
+    .feature-card,
+    .service-card {
+        padding: 20px;
+    }
+
+    .admin-welcome {
+        padding: 22px;
+    }
+
+    .admin-information {
+        padding: 14px;
+    }
+
+    #admin-contenido .admin-section {
+        padding: 13px;
+    }
 }
 
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
 
-#usuario-header:not([hidden]) {
-    display: inline-block;
-    font-weight: bold;
-}
+/* EVITAR DESBORDAMIENTOS */
+@media (max-width: 768px) {
 
-#btn-cerrar-sesion:not([hidden]) {
-    display: inline-block;
+    .panel,
+    .dashboard-card,
+    .feature-card,
+    .service-card,
+    .admin-information,
+    .admin-welcome {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
 
-}
+    .table-wrapper,
+    #admin-contenido .admin-table-wrapper {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    img {
+        height: auto;
+    }
 }

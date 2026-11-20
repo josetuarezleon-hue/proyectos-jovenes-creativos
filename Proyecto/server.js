@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -25,6 +26,7 @@ app.use(express.static(__dirname));
 // ============================================
 // 2. MODELO DE USUARIO
 // ============================================
+
 
 const usuarioSchema = new mongoose.Schema({
     nombre: {
@@ -42,6 +44,11 @@ const usuarioSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    rol: {
+        type: String,
+        enum: ['usuario', 'admin'],
+        default: 'usuario'
     }
 }, {
     timestamps: true
@@ -89,6 +96,37 @@ const movimientoSchema = new mongoose.Schema({
 });
 
 const Movimiento = mongoose.model('Movimiento', movimientoSchema);
+const contactoSchema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 100
+    },
+    email: {
+        type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
+        maxlength: 180
+    },
+    asunto: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 160
+    },
+    mensaje: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 3000
+    }
+}, {
+    timestamps: true
+});
+
+const Contacto = mongoose.model('Contacto', contactoSchema);
 
 // ============================================
 // 4. CREAR Y VERIFICAR TOKENS
@@ -139,7 +177,16 @@ async function verificarToken(req, res, next) {
         });
     }
 }
+// Verificar que el usuario sea administrador
+function verificarAdmin(req, res, next) {
+    if (!req.usuario || req.usuario.rol !== 'admin') {
+        return res.status(403).json({
+            mensaje: 'Acceso denegado. Solo administradores.'
+        });
+    }
 
+    next();
+}
 // ============================================
 // 5. REGISTRO DE USUARIOS
 // ============================================
@@ -233,16 +280,17 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         const token = crearToken(usuario);
-
+console.log('ROL EN LOGIN:', usuario.rol);
         res.status(200).json({
-            mensaje: 'Inicio de sesión correcto.',
-            token,
-            usuario: {
-                id: usuario._id,
-                nombre: usuario.nombre,
-                email: usuario.email
-            }
-        });
+    mensaje: 'Inicio de sesión correcto.',
+    token,
+    usuario: {
+        id: usuario._id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        rol: usuario.rol
+    }
+});
 
     } catch (error) {
         res.status(500).json({
@@ -512,9 +560,221 @@ app.delete('/api/movimientos/:id', verificarToken, async (req, res) => {
         });
     }
 });
+// ===============================
+// RUTAS DEL PANEL ADMINISTRATIVO
+// ===============================
+
+// Listar usuarios
+app.get('/api/admin/usuarios', verificarToken, verificarAdmin, async (req, res) => {
+    try {
+        const usuarios = await Usuario.find()
+            .select('-password')
+            .sort({ createdAt: -1 });
+
+        res.json(usuarios);
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al obtener usuarios' });
+    }
+});
+
+// Listar contactos
+app.get('/api/admin/contactos', verificarToken, verificarAdmin, async (req, res) => {
+    try {
+        const contactos = await Contacto.find().sort({ createdAt: -1 });
+        res.json(contactos);
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al obtener contactos' });
+    }
+});
+
+// Listar movimientos
+app.get('/api/admin/movimientos', verificarToken, verificarAdmin, async (req, res) => {
+    try {
+        const movimientos = await Movimiento.find()
+            .populate('usuario', 'nombre email')
+            .sort({ createdAt: -1 });
+
+        res.json(movimientos);
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al obtener movimientos' });
+    }
+});
+
+// Estadísticas generales
+app.get('/api/admin/estadisticas', verificarToken, verificarAdmin, async (req, res) => {
+    try {
+        const [usuarios, contactos, movimientos] = await Promise.all([
+            Usuario.countDocuments(),
+            Contacto.countDocuments(),
+            Movimiento.countDocuments()
+        ]);
+
+        res.json({
+            usuarios,
+            contactos,
+            movimientos
+        });
+    } catch (error) {
+        res.status(500).json({ mensaje: 'Error al obtener estadísticas' });
+    }
+});
+// ============================================
+// 14. FORMULARIO DE CONTACTO
+// ============================================
+
+// Guardar un mensaje en MongoDB
+app.post('/api/contactos', async (req, res) => {
+    try {
+        const { nombre, email, asunto, mensaje } = req.body;
+
+        if (!nombre || !email || !asunto || !mensaje) {
+            return res.status(400).json({
+                mensaje: 'Completa todos los campos.'
+            });
+        }
+
+        const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+        if (!correoValido) {
+            return res.status(400).json({
+                mensaje: 'Ingresa un correo electrónico válido.'
+            });
+        }
+
+        const nuevoContacto = await Contacto.create({
+            nombre: nombre.trim(),
+            email: email.trim().toLowerCase(),
+            asunto: asunto.trim(),
+            mensaje: mensaje.trim()
+        });
+
+        res.status(201).json({
+            mensaje: 'Tu mensaje se ha enviado correctamente.',
+            contacto: {
+                id: nuevoContacto._id,
+                fecha: nuevoContacto.createdAt
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al guardar contacto:', error);
+
+        res.status(500).json({
+            mensaje: 'No se pudo enviar el mensaje. Inténtalo nuevamente.'
+        });
+    }
+});
 
 // ============================================
-// 14. INICIAR SERVIDOR
+// 15 ASISTENTE FINANCIERO CON INTELIGENCIA ARTIFICIAL
+// ============================================
+
+app.post('/api/asistente', verificarToken, async (req, res) => {
+    try {
+        const { ingresos, gastos, objetivo } = req.body;
+
+        const totalIngresos = Number(ingresos);
+        const totalGastos = Number(gastos);
+
+        if (
+            !Number.isFinite(totalIngresos) ||
+            !Number.isFinite(totalGastos) ||
+            totalIngresos <= 0 ||
+            totalGastos < 0 ||
+            typeof objetivo !== 'string' ||
+            !objetivo.trim() ||
+            objetivo.length > 1000
+        ) {
+            return res.status(400).json({
+                mensaje: 'Verifica los ingresos, gastos y objetivo.'
+            });
+        }
+
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error('Falta configurar GEMINI_API_KEY en .env');
+        }
+
+        const { GoogleGenAI } = await import('@google/genai');
+
+        const ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY
+        });
+
+        let resultado;
+
+        for (let intento = 1; intento <= 2; intento++) {
+            try {
+                resultado = await ai.models.generateContent({
+                    model: 'gemini-3.8-flash',
+                    contents: `
+                Eres el asistente financiero de Balancea360.
+                Responde en español, de forma clara y profesional.
+
+                Ingresos mensuales: $${totalIngresos}
+                Gastos mensuales: $${totalGastos}
+                Objetivo: ${objetivo.trim()}
+
+                Calcula el balance mensual y ofrece recomendaciones
+                prácticas para ahorrar y organizar el dinero.
+
+                No inventes datos ni prometas resultados financieros.
+                Tus recomendaciones son orientativas.
+            `
+                });
+
+                break;
+
+            } catch (error) {
+                const codigo = Number(
+                    error.status ||
+                    error.statusCode ||
+                    error.response?.status ||
+                    (error.message.match(/"code"\s*:\s*(\d{3})/) || [])[1]
+                );
+
+                const esTemporal = codigo === 503 || codigo === 429;
+
+                if (!esTemporal || intento === 2) {
+                    throw error;
+                }
+
+                console.log(
+                    'Gemini está ocupado. Reintentando en 2 segundos...'
+                );
+
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+
+        if (!resultado) {
+            throw new Error('Gemini no pudo generar el análisis.');
+        }
+
+        res.json({
+            mensaje: 'Análisis generado correctamente.',
+            respuesta: resultado.text
+        });
+
+    } catch (error) {
+        console.error('Error en Gemini:', error.message);
+
+        const estado = error.status || error.statusCode;
+
+        if (estado === 503 || estado === 429) {
+            return res.status(503).json({
+                mensaje: 'El asistente financiero está ocupado. Espera un momento e inténtalo nuevamente.'
+            });
+        }
+
+        res.status(500).json({
+            mensaje: 'No se pudo generar el análisis. Inténtalo nuevamente.'
+        });
+    }
+});
+
+
+// ============================================
+// 16. INICIAR SERVIDOR
 // ============================================
 
 async function iniciarServidor() {
@@ -530,6 +790,14 @@ async function iniciarServidor() {
         await mongoose.connect(process.env.MONGODB_URI, {
             dbName: 'balancea360'
         });
+        // Configurar cuenta administradora
+        await Usuario.updateOne(
+        { email: 'jose.tuarezleon@gmail.com' },
+        { $set: { rol: 'admin' } }
+        );
+       
+
+        console.log('Cuenta administradora configurada.');
 
         console.log('MongoDB conectado correctamente.');
 
@@ -541,10 +809,10 @@ async function iniciarServidor() {
             console.log('================================');
         });
 
-    } catch (error) {
-        console.error('No se pudo iniciar el servidor:', error.message);
-        process.exit(1);
+        } catch (error) {
+            console.error('No se pudo iniciar el servidor:', error.message);
+            process.exit(1);
+        }
     }
-}
 
-iniciarServidor();
+    iniciarServidor();

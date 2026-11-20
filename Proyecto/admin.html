@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel administrativo de Balancea360">
+
+    <title>Administración | Balancea360</title>
+
+    <link rel="stylesheet" href="./style.css">
+    <script src="./calculos.js" defer></script>
+</head>
+
+<body class="admin-page">
+
+    <header class="header">
+        <div class="container header-content">
+
+            <a href="index.html" class="logo">
+                Balancea<span>360</span>
+            </a>
+
+            <div class="header-actions">
+                <span id="usuario-header" hidden></span>
+
+                <a href="index.html" class="btn btn-outline">
+                    Volver al inicio
+                </a>
+
+                <button
+                    id="btn-cerrar-sesion"
+                    class="btn btn-outline"
+                    type="button"
+                    hidden>
+                    Cerrar sesión
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="section admin-main">
+
+        <div class="container">
+
+            <section class="admin-welcome">
+                <div>
+                    <p class="eyebrow">GESTIÓN DEL SISTEMA</p>
+                    <h1>Panel administrativo</h1>
+                    <p>
+                        Bienvenido al centro de control de Balancea360.
+                        Aquí puedes supervisar la información de la plataforma.
+                    </p>
+                </div>
+            </section>
+
+            <section class="admin-stats">
+
+                <article class="admin-stat-card">
+                    <div class="admin-stat-icon">👥</div>
+                    <h3>Usuarios registrados</h3>
+                    <p id="admin-total-usuarios">0</p>
+                    <span>Cuentas en la plataforma</span>
+                </article>
+
+                <article class="admin-stat-card">
+                    <div class="admin-stat-icon">✉️</div>
+                    <h3>Contactos recibidos</h3>
+                    <p id="admin-total-contactos">0</p>
+                    <span>Mensajes recibidos</span>
+                </article>
+
+                <article class="admin-stat-card">
+                    <div class="admin-stat-icon">📊</div>
+                    <h3>Movimientos registrados</h3>
+                    <p id="admin-total-movimientos">0</p>
+                    <span>Ingresos y gastos</span>
+                </article>
+
+            </section>
+
+            <section class="admin-information">
+
+                <div class="admin-information-heading">
+                    <div>
+                        <p class="eyebrow">BALANCEA360</p>
+                        <h2>Información administrativa</h2>
+                        <p>Consulta y gestiona los datos de la plataforma.</p>
+                    </div>
+                </div>
+
+                <div id="admin-contenido" aria-live="polite">
+                    Cargando información...
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
