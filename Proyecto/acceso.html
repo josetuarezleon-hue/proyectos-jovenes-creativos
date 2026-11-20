@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Inicia sesión o crea tu cuenta en Balancea360 para administrar tus finanzas personales.">
+    <title>Acceso | Balancea360</title>
+
+    <link rel="stylesheet" href="./style.css">
+    <script src="./calculos.js" defer></script>
+</head>
+
+<body>
+
+    <!-- ENCABEZADO -->
+    <header class="header">
+        <div class="container header-content">
+
+            <a href="index.html" class="logo">
+                Balancea<span>360</span>
+            </a>
+
+            <div class="header-actions">
+
+                <a href="index.html" class="btn btn-outline">
+                    Volver al inicio
+                </a>
+
+                <span id="usuario-header" hidden></span>
+
+                <button
+                    id="btn-cerrar-sesion"
+                    class="btn btn-outline"
+                    type="button"
+                    hidden>
+                    Cerrar sesión
+                </button>
+
+            </div>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- REGISTRO E INICIO DE SESIÓN -->
+        <section class="section access-section" id="acceso">
+
+            <div class="container">
+
+                <div class="section-heading">
+                    <p class="eyebrow">TU CUENTA PERSONAL</p>
+
+                    <h2>Bienvenido a Balancea360</h2>
+
+                    <p>
+                        Accede a tus finanzas desde un solo lugar.
+                        Organiza tus ingresos, gastos y objetivos.
+                    </p>
+                </div>
+
+                <div class="access-grid">
+
+                    <!-- FORMULARIO DE REGISTRO -->
+                    <article class="panel">
+
+                        <h3>Crear una cuenta</h3>
+
+                        <form id="form-registro">
+
+                            <div class="form-group">
+                                <label for="registro-nombre">
+                                    Nombre completo
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="registro-nombre"
+                                    autocomplete="name"
+                                    maxlength="100"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="registro-email">
+                                    Correo electrónico
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="registro-email"
+                                    autocomplete="email"
+                                    maxlength="180"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="registro-password">
+                                    Contraseña
+                                </label>
+
+                                <input
+                                    type="password"
+                                    id="registro-password"
+                                    minlength="8"
+                                    autocomplete="new-password"
+                                    required>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary btn-full">
+                                Registrarme
+                            </button>
+
+                            <p
+                                id="mensaje-registro"
+                                class="form-message"
+                                role="status"
+                                aria-live="polite">
+                            </p>
+
+                        </form>
+
+                    </article>
+
+                    <!-- FORMULARIO DE INICIO DE SESIÓN -->
+                    <article class="panel">
+
+                        <h3>Iniciar sesión</h3>
+
+                        <form id="form-login">
+
+                            <div class="form-group">
+                                <label for="login-email">
+                                    Correo electrónico
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="login-email"
+                                    autocomplete="email"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="login-password">
+                                    Contraseña
+                                </label>
+
+                                <input
+                                    type="password"
+                                    id="login-password"
+                                    autocomplete="current-password"
+                                    required>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary btn-full">
+                                Iniciar sesión
+                            </button>
+
+                            <button
+                                type="button"
+                                id="btn-recuperar-password"
+                                class="text-button">
+                                Recuperar contraseña
+                            </button>
+
+                            <p
+                                id="mensaje-login"
+                                class="form-message"
+                                role="status"
+                                aria-live="polite">
+                            </p>
+
+                        </form>
+
+                    </article>
+
+                </div>
+
+                <!-- ESTADO DE LA CUENTA -->
+                <div
+                    id="estado-cuenta"
+                    class="account-status"
+                    aria-live="polite">
+                    No has iniciado sesión.
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>

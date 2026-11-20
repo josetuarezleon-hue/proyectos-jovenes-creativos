@@ -1411,4 +1411,23 @@ tbody td[colspan] {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
     }
+    [hidden] {
+    display: none !important;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#usuario-header:not([hidden]) {
+    display: inline-block;
+    font-weight: bold;
+}
+
+#btn-cerrar-sesion:not([hidden]) {
+    display: inline-block;
+
+}
 }

@@ -3,644 +3,548 @@
 // BALANCEA360 - SERVIDOR PRINCIPAL
 // ============================================
 
-
-// 1. IMPORTAR LAS HERRAMIENTAS
-
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-
-// 2. CONFIGURAR EL SERVIDOR
-
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 
-
-// 3. CONFIGURAR LOS MIDDLEWARES
+// ============================================
+// 1. CONFIGURACIÓN
+// ============================================
 
 app.use(cors());
-
 app.use(express.json());
-
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
 
+// ============================================
+// 2. MODELO DE USUARIO
+// ============================================
 
-// 4. CONECTAR CON MONGODB ATLAS
-
-// Esta función conecta nuestro servidor con la base de datos.
-
-async function conectarBaseDatos() {
-
-    try {
-
-        // Comprobar que exista la dirección de conexión
-        if (!process.env.MONGODB_URI) {
-            throw new Error('No se encontró MONGODB_URI en el archivo .env');
-        }
-
-        // Conectar con MongoDB Atlas
-        await mongoose.connect(process.env.MONGODB_URI, {
-            dbName: 'balancea360'
-        });
-
-        console.log('MongoDB Atlas conectado correctamente');
-
-    } catch (error) {
-
-        console.error('Error al conectar con MongoDB:', error.message);
-
-        throw error;
-
+const usuarioSchema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
+    password: {
+        type: String,
+        required: true
     }
+}, {
+    timestamps: true
+});
 
-}
+const Usuario = mongoose.model('Usuario', usuarioSchema);
 
-
-// 5. CREAR EL MODELO DE MOVIMIENTOS
-
-// Este modelo define cómo se guardarán los movimientos
-// financieros dentro de MongoDB.
+// ============================================
+// 3. MODELO DE MOVIMIENTOS
+// ============================================
 
 const movimientoSchema = new mongoose.Schema({
-
+    usuario: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: true,
+        index: true
+    },
     tipo: {
         type: String,
         enum: ['ingreso', 'gasto'],
         required: true
     },
-
     concepto: {
         type: String,
         required: true,
         trim: true
     },
-
     categoria: {
         type: String,
         required: true,
         trim: true
     },
-
     monto: {
         type: Number,
         required: true,
         min: 0.01
     },
-
     fecha: {
         type: Date,
         required: true
     }
-
 }, {
-
     timestamps: true
-
 });
 
+const Movimiento = mongoose.model('Movimiento', movimientoSchema);
 
-// Crear el modelo que permitirá trabajar con los movimientos.
+// ============================================
+// 4. CREAR Y VERIFICAR TOKENS
+// ============================================
 
-const Movimiento = mongoose.model(
-    'Movimiento',
-    movimientoSchema
-);
+function crearToken(usuario) {
+    return jwt.sign(
+        {
+            id: usuario._id.toString()
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: '1d'
+        }
+    );
+}
 
+// Middleware: comprueba que el usuario haya iniciado sesión.
 
-// 6. RUTA PRINCIPAL
+async function verificarToken(req, res, next) {
+    try {
+        const encabezado = req.headers.authorization;
 
-// Cuando alguien visite la página principal,
-// el servidor mostrará index.html.
+        if (!encabezado || !encabezado.startsWith('Bearer ')) {
+            return res.status(401).json({
+                mensaje: 'Debes iniciar sesión.'
+            });
+        }
 
-app.get('/', (req, res) => {
+        const token = encabezado.split(' ')[1];
 
-    res.sendFile(__dirname + '/index.html');
+        const datos = jwt.verify(token, process.env.JWT_SECRET);
 
+        const usuario = await Usuario.findById(datos.id).select('-password');
+
+        if (!usuario) {
+            return res.status(401).json({
+                mensaje: 'La cuenta no existe.'
+            });
+        }
+
+        req.usuario = usuario;
+        next();
+
+    } catch (error) {
+        return res.status(401).json({
+            mensaje: 'Sesión inválida o vencida. Inicia sesión nuevamente.'
+        });
+    }
+}
+
+// ============================================
+// 5. REGISTRO DE USUARIOS
+// ============================================
+
+app.post('/api/auth/registro', async (req, res) => {
+    try {
+        const { nombre, email, password } = req.body;
+
+        if (!nombre || !email || !password) {
+            return res.status(400).json({
+                mensaje: 'Completa todos los campos.'
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                mensaje: 'La contraseña debe tener al menos 8 caracteres.'
+            });
+        }
+
+        const correo = email.trim().toLowerCase();
+
+        const existe = await Usuario.findOne({ email: correo });
+
+        if (existe) {
+            return res.status(409).json({
+                mensaje: 'Ya existe una cuenta con ese correo.'
+            });
+        }
+
+        const passwordProtegida = await bcrypt.hash(password, 12);
+
+        const nuevoUsuario = await Usuario.create({
+            nombre: nombre.trim(),
+            email: correo,
+            password: passwordProtegida
+        });
+
+        const token = crearToken(nuevoUsuario);
+
+        res.status(201).json({
+            mensaje: 'Cuenta creada correctamente.',
+            token,
+            usuario: {
+                id: nuevoUsuario._id,
+                nombre: nuevoUsuario.nombre,
+                email: nuevoUsuario.email
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            mensaje: 'No se pudo crear la cuenta.'
+        });
+    }
 });
 
+// ============================================
+// 6. INICIO DE SESIÓN
+// ============================================
 
-// Rutas para cargar los archivos de diseño y JavaScript.
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-app.get('/style.css', (req, res) => {
+        if (!email || !password) {
+            return res.status(400).json({
+                mensaje: 'Ingresa tu correo y contraseña.'
+            });
+        }
 
-    res.sendFile(__dirname + '/style.css');
+        const usuario = await Usuario.findOne({
+            email: email.trim().toLowerCase()
+        });
 
+        if (!usuario) {
+            return res.status(401).json({
+                mensaje: 'Correo o contraseña incorrectos.'
+            });
+        }
+
+        const coincide = await bcrypt.compare(
+            password,
+            usuario.password
+        );
+
+        if (!coincide) {
+            return res.status(401).json({
+                mensaje: 'Correo o contraseña incorrectos.'
+            });
+        }
+
+        const token = crearToken(usuario);
+
+        res.status(200).json({
+            mensaje: 'Inicio de sesión correcto.',
+            token,
+            usuario: {
+                id: usuario._id,
+                nombre: usuario.nombre,
+                email: usuario.email
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            mensaje: 'No se pudo iniciar sesión.'
+        });
+    }
 });
 
-app.get('/calculos.js', (req, res) => {
+// ============================================
+// 7. CONSULTAR LA SESIÓN ACTUAL
+// ============================================
 
-    res.sendFile(__dirname + '/calculos.js');
-
+app.get('/api/auth/me', verificarToken, (req, res) => {
+    res.json({
+        usuario: req.usuario
+    });
 });
 
+// ============================================
+// 8. CERRAR SESIÓN
+// ============================================
 
-// 7. RUTA PARA COMPROBAR EL SERVIDOR
+// El cierre se realiza eliminando el token en el navegador.
+// Esta ruta permite confirmar la operación.
 
-// Permite verificar si el servidor y la base de datos funcionan.
+app.post('/api/auth/logout', verificarToken, (req, res) => {
+    res.json({
+        mensaje: 'Sesión cerrada correctamente.'
+    });
+});
+
+// ============================================
+// 9. ESTADO DEL SERVIDOR
+// ============================================
 
 app.get('/api/health', (req, res) => {
-
-    res.status(200).json({
-
+    res.json({
         estado: 'correcto',
-
-        mensaje: 'Servidor de Balancea360 funcionando',
-
+        servidor: 'Balancea360',
         baseDatos: mongoose.connection.readyState === 1
             ? 'conectada'
             : 'desconectada'
-
     });
-
 });
 
+// ============================================
+// 10. CONSULTAR MOVIMIENTOS DEL USUARIO
+// ============================================
 
-// 8. CONSULTAR TODOS LOS MOVIMIENTOS (GET)
-
-// También permite filtrar por tipo, mes y categoría.
-
-app.get('/api/movimientos', async (req, res) => {
-
+app.get('/api/movimientos', verificarToken, async (req, res) => {
     try {
-
         const { tipo, mes, categoria } = req.query;
 
-        const filtros = {};
-
-
-        // Filtrar por ingreso o gasto.
+        const filtros = {
+            usuario: req.usuario._id
+        };
 
         if (tipo) {
-
             if (!['ingreso', 'gasto'].includes(tipo)) {
                 return res.status(400).json({
-                    mensaje: 'El tipo debe ser ingreso o gasto'
+                    mensaje: 'Tipo de movimiento no válido.'
                 });
             }
 
             filtros.tipo = tipo;
-
         }
-
-
-        // Filtrar por categoría.
 
         if (categoria) {
-
             filtros.categoria = categoria;
-
         }
 
-
-        // Filtrar por mes.
-
         if (mes) {
-
-            if (!/^\d{4}-\d{2}$/.test(mes)) {
-
+            if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
                 return res.status(400).json({
-                    mensaje: 'El mes debe tener formato YYYY-MM'
+                    mensaje: 'El mes debe tener formato YYYY-MM.'
                 });
-
             }
 
             const [anio, numeroMes] = mes.split('-').map(Number);
 
-            if (numeroMes < 1 || numeroMes > 12) {
-                return res.status(400).json({
-                    mensaje: 'El mes debe estar entre 01 y 12'
-                });
-            }
-
-            const inicio = new Date(Date.UTC(anio, numeroMes - 1, 1));
-
-            const fin = new Date(Date.UTC(anio, numeroMes, 1));
-
             filtros.fecha = {
-                $gte: inicio,
-                $lt: fin
+                $gte: new Date(Date.UTC(anio, numeroMes - 1, 1)),
+                $lt: new Date(Date.UTC(anio, numeroMes, 1))
             };
-
         }
-
-
-        // Buscar los movimientos en MongoDB.
 
         const movimientos = await Movimiento.find(filtros)
             .sort({ fecha: -1 });
 
-
-        res.status(200).json(movimientos);
-
+        res.json(movimientos);
 
     } catch (error) {
-
         res.status(500).json({
-
-            mensaje: 'Error al consultar movimientos',
-
-            error: error.message
-
+            mensaje: 'Error al consultar movimientos.'
         });
-
     }
-
 });
 
+// ============================================
+// 11. REGISTRAR MOVIMIENTO
+// ============================================
 
-// 9. BUSCAR UN MOVIMIENTO POR SU ID (GET)
-
-app.get('/api/movimientos/:id', async (req, res) => {
-
+app.post('/api/movimientos', verificarToken, async (req, res) => {
     try {
-
-        const { id } = req.params;
-
-
-        // Comprobar que el ID sea válido.
-
-        if (!mongoose.isValidObjectId(id)) {
-
-            return res.status(400).json({
-                mensaje: 'Identificador no válido'
-            });
-
-        }
-
-
-        // Buscar el movimiento.
-
-        const movimiento = await Movimiento.findById(id);
-
-
-        if (!movimiento) {
-
-            return res.status(404).json({
-                mensaje: 'Movimiento no encontrado'
-            });
-
-        }
-
-
-        res.status(200).json(movimiento);
-
-
-    } catch (error) {
-
-        res.status(500).json({
-
-            mensaje: 'Error al buscar movimiento',
-
-            error: error.message
-
-        });
-
-    }
-
-});
-
-
-// 10. REGISTRAR UN MOVIMIENTO (POST)
-
-app.post('/api/movimientos', async (req, res) => {
-
-    try {
-
         const { tipo, concepto, categoria, monto, fecha } = req.body;
 
-
-        // Comprobar que no falte ningún campo.
-
-        if (
-            !tipo ||
-            !concepto ||
-            !categoria ||
-            monto === undefined ||
-            monto === null ||
-            !fecha
-        ) {
-
+        if (!tipo || !concepto || !categoria || monto == null || !fecha) {
             return res.status(400).json({
-                mensaje: 'Todos los campos son obligatorios'
+                mensaje: 'Completa todos los campos.'
             });
-
         }
-
-
-        // Comprobar el tipo de movimiento.
 
         if (!['ingreso', 'gasto'].includes(tipo)) {
-
             return res.status(400).json({
-                mensaje: 'El tipo debe ser ingreso o gasto'
+                mensaje: 'Tipo de movimiento no válido.'
             });
-
         }
-
-
-        // Convertir el monto a número.
 
         const cantidad = Number(monto);
-
-
-        if (!Number.isFinite(cantidad) || cantidad <= 0) {
-
-            return res.status(400).json({
-                mensaje: 'El monto debe ser mayor que cero'
-            });
-
-        }
-
-
-        // Comprobar la fecha.
-
         const nuevaFecha = new Date(fecha);
 
+        if (!Number.isFinite(cantidad) || cantidad <= 0) {
+            return res.status(400).json({
+                mensaje: 'El monto debe ser mayor que cero.'
+            });
+        }
 
         if (Number.isNaN(nuevaFecha.getTime())) {
-
             return res.status(400).json({
-                mensaje: 'La fecha no es válida'
+                mensaje: 'Fecha no válida.'
             });
-
         }
 
-
-        // Crear un nuevo movimiento.
-
-        const nuevoMovimiento = new Movimiento({
-
+        const movimiento = await Movimiento.create({
+            usuario: req.usuario._id,
             tipo,
-
-            concepto,
-
-            categoria,
-
+            concepto: concepto.trim(),
+            categoria: categoria.trim(),
             monto: cantidad,
-
             fecha: nuevaFecha
-
         });
-
-
-        // Guardar el movimiento en MongoDB.
-
-        const movimientoGuardado = await nuevoMovimiento.save();
-
 
         res.status(201).json({
-
-            mensaje: 'Movimiento registrado correctamente',
-
-            movimiento: movimientoGuardado
-
+            mensaje: 'Movimiento guardado correctamente.',
+            movimiento
         });
-
 
     } catch (error) {
-
         res.status(500).json({
-
-            mensaje: 'Error al registrar movimiento',
-
-            error: error.message
-
+            mensaje: 'Error al guardar el movimiento.'
         });
-
     }
-
 });
 
+// ============================================
+// 12. ACTUALIZAR MOVIMIENTO
+// ============================================
 
-// 11. ACTUALIZAR UN MOVIMIENTO (PUT)
-
-app.put('/api/movimientos/:id', async (req, res) => {
-
+app.put('/api/movimientos/:id', verificarToken, async (req, res) => {
     try {
-
         const { id } = req.params;
 
-
-        // Comprobar el ID.
-
         if (!mongoose.isValidObjectId(id)) {
-
             return res.status(400).json({
-                mensaje: 'Identificador no válido'
+                mensaje: 'Identificador no válido.'
             });
-
         }
 
+        const datos = {};
 
-        const datos = { ...req.body };
+        const campos = ['tipo', 'concepto', 'categoria', 'monto', 'fecha'];
 
+        for (const campo of campos) {
+            if (req.body[campo] !== undefined) {
+                datos[campo] = req.body[campo];
+            }
+        }
 
-        // Comprobar el monto si se desea modificar.
+        if (datos.tipo && !['ingreso', 'gasto'].includes(datos.tipo)) {
+            return res.status(400).json({
+                mensaje: 'Tipo no válido.'
+            });
+        }
 
         if (datos.monto !== undefined) {
-
             datos.monto = Number(datos.monto);
 
             if (!Number.isFinite(datos.monto) || datos.monto <= 0) {
-
                 return res.status(400).json({
-                    mensaje: 'El monto debe ser mayor que cero'
+                    mensaje: 'Monto no válido.'
                 });
-
             }
-
         }
 
+        if (datos.fecha !== undefined) {
+            datos.fecha = new Date(datos.fecha);
 
-        // Comprobar el tipo si se desea modificar.
-
-        if (
-            datos.tipo !== undefined &&
-            !['ingreso', 'gasto'].includes(datos.tipo)
-        ) {
-
-            return res.status(400).json({
-                mensaje: 'Tipo de movimiento no válido'
-            });
-
-        }
-
-
-        // Solo permitir modificar estos campos.
-
-        const camposPermitidos = [
-            'tipo',
-            'concepto',
-            'categoria',
-            'monto',
-            'fecha'
-        ];
-
-        const actualizacion = {};
-
-
-        for (const campo of camposPermitidos) {
-
-            if (datos[campo] !== undefined) {
-
-                actualizacion[campo] = datos[campo];
-
+            if (Number.isNaN(datos.fecha.getTime())) {
+                return res.status(400).json({
+                    mensaje: 'Fecha no válida.'
+                });
             }
-
         }
 
-
-        // Actualizar el movimiento en MongoDB.
-
-        const movimientoActualizado = await Movimiento.findByIdAndUpdate(
-
-            id,
-
-            actualizacion,
-
+        const movimiento = await Movimiento.findOneAndUpdate(
+            {
+                _id: id,
+                usuario: req.usuario._id
+            },
+            datos,
             {
                 new: true,
                 runValidators: true
             }
-
         );
 
-
-        if (!movimientoActualizado) {
-
+        if (!movimiento) {
             return res.status(404).json({
-                mensaje: 'Movimiento no encontrado'
+                mensaje: 'Movimiento no encontrado.'
             });
-
         }
 
-
-        res.status(200).json({
-
-            mensaje: 'Movimiento actualizado correctamente',
-
-            movimiento: movimientoActualizado
-
+        res.json({
+            mensaje: 'Movimiento actualizado.',
+            movimiento
         });
-
 
     } catch (error) {
-
         res.status(400).json({
-
-            mensaje: 'No se pudo actualizar el movimiento',
-
-            error: error.message
-
+            mensaje: 'No se pudo actualizar el movimiento.'
         });
-
     }
-
 });
 
+// ============================================
+// 13. ELIMINAR MOVIMIENTO
+// ============================================
 
-// 12. ELIMINAR UN MOVIMIENTO (DELETE)
-
-app.delete('/api/movimientos/:id', async (req, res) => {
-
+app.delete('/api/movimientos/:id', verificarToken, async (req, res) => {
     try {
-
         const { id } = req.params;
 
-
-        // Comprobar el ID.
-
         if (!mongoose.isValidObjectId(id)) {
-
             return res.status(400).json({
-                mensaje: 'Identificador no válido'
+                mensaje: 'Identificador no válido.'
             });
-
         }
 
-
-        // Eliminar el movimiento.
-
-        const movimientoEliminado = await Movimiento.findByIdAndDelete(id);
-
-
-        if (!movimientoEliminado) {
-
-            return res.status(404).json({
-                mensaje: 'Movimiento no encontrado'
-            });
-
-        }
-
-
-        res.status(200).json({
-
-            mensaje: 'Movimiento eliminado correctamente'
-
+        const movimiento = await Movimiento.findOneAndDelete({
+            _id: id,
+            usuario: req.usuario._id
         });
 
+        if (!movimiento) {
+            return res.status(404).json({
+                mensaje: 'Movimiento no encontrado.'
+            });
+        }
+
+        res.json({
+            mensaje: 'Movimiento eliminado correctamente.'
+        });
 
     } catch (error) {
-
         res.status(500).json({
-
-            mensaje: 'Error al eliminar movimiento',
-
-            error: error.message
-
+            mensaje: 'Error al eliminar el movimiento.'
         });
-
     }
-
 });
 
-
-// 13. INICIAR EL SERVIDOR
-
-// Primero conecta con MongoDB.
-// Después inicia el servidor web.
+// ============================================
+// 14. INICIAR SERVIDOR
+// ============================================
 
 async function iniciarServidor() {
-
     try {
+        if (!process.env.MONGODB_URI) {
+            throw new Error('Falta MONGODB_URI en .env');
+        }
 
-        await conectarBaseDatos();
+        if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+            throw new Error('Configura un JWT_SECRET de al menos 32 caracteres.');
+        }
 
-
-        app.listen(PORT, () => {
-
-            console.log('================================');
-
-            console.log('       BALANCEA360');
-
-            console.log('================================');
-
-            console.log(`Servidor: http://localhost:${PORT}`);
-
-            console.log('Base de datos: conectada');
-
-            console.log('Servidor iniciado correctamente');
-
-            console.log('================================');
-
+        await mongoose.connect(process.env.MONGODB_URI, {
+            dbName: 'balancea360'
         });
 
+        console.log('MongoDB conectado correctamente.');
+
+        app.listen(PORT, () => {
+            console.log('================================');
+            console.log('BALANCEA360');
+            console.log(`Servidor: http://localhost:${PORT}`);
+            console.log('MongoDB: conectado');
+            console.log('================================');
+        });
 
     } catch (error) {
-
         console.error('No se pudo iniciar el servidor:', error.message);
-
         process.exit(1);
-
     }
-
 }
-
-
-// Ejecutar la función para iniciar todo.
 
 iniciarServidor();

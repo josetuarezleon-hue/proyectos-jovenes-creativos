@@ -30,13 +30,23 @@
             </nav>
 
             <div class="header-actions">
-                <a href="#acceso" class="btn btn-outline">Iniciar sesión</a>
-                <a href="#acceso" class="btn btn-primary">Registrarse</a>
+                <a href="acceso.html?modo=login" id="enlace-login" class="btn btn-outline">
+                    Iniciar sesión
+                </a>
+
+                <a href="acceso.html?modo=registro" id="enlace-registro" class="btn btn-primary">
+                    Registrarse
+                </a>
+
+                <span id="usuario-header" hidden></span>
+
+                <button type="button" id="btn-cerrar-sesion" class="btn btn-outline" hidden>
+                    Cerrar sesión
+                </button>
             </div>
 
         </div>
     </header>
-
 
     <main>
 
@@ -59,7 +69,7 @@
                     </p>
 
                     <div class="hero-actions">
-                        <a href="#acceso" class="btn btn-primary">
+                        <a href="acceso.html?modo=registro" class="btn btn-primary">
                             Comenzar gratis
                         </a>
 
@@ -98,7 +108,6 @@
 
             </div>
         </section>
-
 
         <!-- CARACTERÍSTICAS -->
         <section class="features section">
@@ -146,7 +155,6 @@
             </div>
         </section>
 
-
         <!-- PRESUPUESTO PERSONAL -->
         <section id="presupuesto" class="section budget-section">
             <div class="container">
@@ -188,7 +196,9 @@
                         <form id="form-movimiento">
 
                             <div class="form-group">
-                                <label for="tipo-movimiento">Tipo de movimiento</label>
+                                <label for="tipo-movimiento">
+                                    Tipo de movimiento
+                                </label>
                                 <select id="tipo-movimiento" name="tipo" required>
                                     <option value="gasto">Gasto</option>
                                     <option value="ingreso">Ingreso</option>
@@ -237,7 +247,6 @@
                         </form>
                     </article>
 
-
                     <!-- HISTORIAL -->
                     <article class="panel">
                         <div class="panel-heading">
@@ -282,15 +291,13 @@
                         </div>
 
                         <p class="table-note">
-                            Los movimientos se asociarán a tu cuenta cuando
-                            conectemos la base de datos y la autenticación.
+                            Los movimientos se guardan en tu cuenta personal.
                         </p>
                     </article>
 
                 </div>
             </div>
         </section>
-
 
         <!-- CATÁLOGO DE SERVICIOS -->
         <section id="servicios" class="section">
@@ -324,7 +331,9 @@
                             Establece objetivos y haz seguimiento de la
                             cantidad que deseas ahorrar.
                         </p>
-                        <a href="#acceso">Crear una cuenta →</a>
+                        <a href="acceso.html?modo=registro">
+                            Crear una cuenta →
+                        </a>
                     </article>
 
                     <article class="service-card">
@@ -341,7 +350,6 @@
 
             </div>
         </section>
-
 
         <!-- ASISTENTE DE IA -->
         <section id="asistente" class="section assistant-section">
@@ -395,91 +403,6 @@
             </div>
         </section>
 
-
-        <!-- REGISTRO E INICIO DE SESIÓN -->
-        <section id="acceso" class="section access-section">
-            <div class="container">
-
-                <div class="section-heading">
-                    <p class="eyebrow">TU CUENTA PERSONAL</p>
-                    <h2>Empieza a organizar tus finanzas</h2>
-                    <p>
-                        Crea tu cuenta o inicia sesión para acceder
-                        a tu espacio financiero personal.
-                    </p>
-                </div>
-
-                <div class="access-grid">
-
-                    <article class="panel">
-                        <h3>Crear una cuenta</h3>
-
-                        <form id="form-registro">
-                            <div class="form-group">
-                                <label for="registro-nombre">Nombre completo</label>
-                                <input type="text" id="registro-nombre" autocomplete="name" maxlength="100" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="registro-email">Correo electrónico</label>
-                                <input type="email" id="registro-email" autocomplete="email" maxlength="180" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="registro-password">Contraseña</label>
-                                <input type="password" id="registro-password" autocomplete="new-password" minlength="8"
-                                    required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary btn-full">
-                                Registrarme
-                            </button>
-
-                            <p id="mensaje-registro" class="form-message" role="status"></p>
-                        </form>
-                    </article>
-
-
-                    <article class="panel">
-                        <h3>Iniciar sesión</h3>
-
-                        <form id="form-login">
-                            <div class="form-group">
-                                <label for="login-email">Correo electrónico</label>
-                                <input type="email" id="login-email" autocomplete="email" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="login-password">Contraseña</label>
-                                <input type="password" id="login-password" autocomplete="current-password" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary btn-full">
-                                Iniciar sesión
-                            </button>
-
-                            <button type="button" id="btn-recuperar-password" class="text-button">
-                                Recuperar contraseña
-                            </button>
-
-                            <p id="mensaje-login" class="form-message" role="status"></p>
-                        </form>
-                    </article>
-
-                </div>
-
-                <div id="estado-cuenta" class="account-status" aria-live="polite">
-                    No has iniciado sesión.
-                </div>
-
-                <button type="button" id="btn-cerrar-sesion" class="btn btn-outline" hidden>
-                    Cerrar sesión
-                </button>
-
-            </div>
-        </section>
-
-
         <!-- ADMINISTRACIÓN -->
         <section id="administracion" class="section admin-section">
             <div class="container">
@@ -500,7 +423,7 @@
                         en el servidor. Ocultar esta sección en el navegador
                         no constituye una medida de seguridad.
                     </p>
-                    <a href="#acceso" class="btn btn-outline">
+                    <a href="acceso.html?modo=login" class="btn btn-outline">
                         Acceder con mi cuenta
                     </a>
                 </div>
@@ -523,7 +446,6 @@
 
             </div>
         </section>
-
 
         <!-- CONTACTO -->
         <section id="contacto" class="section contact-section">
@@ -585,7 +507,6 @@
 
     </main>
 
-
     <!-- PIE DE PÁGINA -->
     <footer class="footer">
         <div class="container footer-content">
@@ -605,10 +526,6 @@
 
         </div>
     </footer>
-
-
-    <!-- JavaScript externo -->
-    <script src="js/app.js" defer></script>
 
 </body>
 

@@ -1,4 +1,3 @@
-
 "use strict";
 
 // ============================================
@@ -6,6 +5,8 @@
 // ============================================
 
 const $ = (id) => document.getElementById(id);
+
+const API = "/api";
 
 const formatoDinero = (cantidad) =>
     new Intl.NumberFormat("es-EC", {
@@ -18,38 +19,18 @@ const fechaActual = () => {
     const anio = fecha.getFullYear();
     const mes = String(fecha.getMonth() + 1).padStart(2, "0");
     const dia = String(fecha.getDate()).padStart(2, "0");
-
     return `${anio}-${mes}-${dia}`;
 };
-
-function leerDatos(clave, valorInicial) {
-    try {
-        const datos = localStorage.getItem(clave);
-        return datos ? JSON.parse(datos) : valorInicial;
-    } catch (error) {
-        console.error(`No se pudieron leer los datos: ${clave}`, error);
-        return valorInicial;
-    }
-}
-
-function guardarDatos(clave, datos) {
-    try {
-        localStorage.setItem(clave, JSON.stringify(datos));
-        return true;
-    } catch (error) {
-        console.error(`No se pudieron guardar los datos: ${clave}`, error);
-        alert("No se pudieron guardar los datos en este navegador.");
-        return false;
-    }
-}
 
 // ============================================
 // ESTADO DE LA APLICACIÓN
 // ============================================
 
-let movimientos = leerDatos("balancea360_movimientos", []);
-let usuarios = leerDatos("balancea360_usuarios", []);
-let servicios = leerDatos("balancea360_servicios", [
+let movimientos = [];
+let usuarioActual = null;
+let token = localStorage.getItem("balancea360_token");
+
+let servicios = [
     {
         id: 1,
         nombre: "Plan de ahorro",
@@ -68,13 +49,46 @@ let servicios = leerDatos("balancea360_servicios", [
         descripcion: "Distribuye tus ingresos según tus prioridades.",
         precio: 0
     }
-]);
+];
 
-let contactos = leerDatos("balancea360_contactos", []);
-let usuarioActual = leerDatos("balancea360_sesion", null);
+let contactos = JSON.parse(
+    localStorage.getItem("balancea360_contactos") || "[]"
+);
 
 // ============================================
-// MENSAJES Y SEGURIDAD DEL DOM
+// COMUNICACIÓN CON EL SERVIDOR
+// ============================================
+
+async function solicitarAPI(ruta, opciones = {}) {
+    const encabezados = {
+        "Content-Type": "application/json",
+        ...opciones.headers
+    };
+
+    if (token) {
+        encabezados.Authorization = `Bearer ${token}`;
+    }
+
+    const respuesta = await fetch(`${API}${ruta}`, {
+        ...opciones,
+        headers: encabezados
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        if (respuesta.status === 401) {
+            cerrarSesionLocal();
+        }
+
+        throw new Error(datos.mensaje || "Ocurrió un error.");
+    }
+
+    return datos;
+}
+
+// ============================================
+// MENSAJES
 // ============================================
 
 function mostrarMensaje(id, mensaje, esError = false) {
@@ -89,28 +103,46 @@ function crearElemento(etiqueta, texto, clase = "") {
     const elemento = document.createElement(etiqueta);
     elemento.textContent = texto;
 
-    if (clase) elemento.className = clase;
+    if (clase) {
+        elemento.className = clase;
+    }
 
     return elemento;
 }
 
 // ============================================
-// PRESUPUESTO Y MOVIMIENTOS
+// MOVIMIENTOS FINANCIEROS
 // ============================================
 
 function calcularTotales(lista = movimientos) {
-    return lista.reduce(
-        (totales, movimiento) => {
-            if (movimiento.tipo === "ingreso") {
-                totales.ingresos += movimiento.monto;
-            } else {
-                totales.gastos += movimiento.monto;
-            }
+    return lista.reduce((totales, movimiento) => {
+        if (movimiento.tipo === "ingreso") {
+            totales.ingresos += Number(movimiento.monto);
+        } else {
+            totales.gastos += Number(movimiento.monto);
+        }
 
-            return totales;
-        },
-        { ingresos: 0, gastos: 0 }
-    );
+        return totales;
+    }, {
+        ingresos: 0,
+        gastos: 0
+    });
+}
+
+async function cargarMovimientos() {
+    if (!token) {
+        movimientos = [];
+        renderizarMovimientos();
+        return;
+    }
+
+    try {
+        movimientos = await solicitarAPI("/movimientos");
+        renderizarMovimientos();
+    } catch (error) {
+        console.error(error);
+        mostrarMensaje("respuesta-asistente", error.message, true);
+    }
 }
 
 function renderizarMovimientos() {
@@ -127,59 +159,62 @@ function renderizarMovimientos() {
             filtroTipo === "todos" || movimiento.tipo === filtroTipo;
 
         const coincideMes =
-            !filtroMes || movimiento.fecha.startsWith(filtroMes);
+            !filtroMes || String(movimiento.fecha).startsWith(filtroMes);
 
         return coincideTipo && coincideMes;
     });
 
-    if (filtrados.length === 0) {
+    if (!token) {
+        lista.appendChild(
+            crearElemento("p", "Inicia sesión para consultar tus movimientos.")
+        );
+    } else if (filtrados.length === 0) {
         lista.appendChild(
             crearElemento("p", "Todavía no hay movimientos para mostrar.")
         );
     } else {
-        filtrados
-            .slice()
-            .sort((a, b) => b.fecha.localeCompare(a.fecha))
-            .forEach((movimiento) => {
-                const fila = document.createElement("div");
-                fila.className = "movimiento-item";
+        filtrados.forEach((movimiento) => {
+            const fila = document.createElement("div");
+            fila.className = "movimiento-item";
 
-                const informacion = document.createElement("div");
-                informacion.append(
-                    crearElemento("strong", movimiento.concepto),
-                    crearElemento(
-                        "small",
-                        `${movimiento.categoria} · ${movimiento.fecha}`
-                    )
-                );
+            const informacion = document.createElement("div");
 
-                const importe = crearElemento(
-                    "span",
-                    `${movimiento.tipo === "ingreso" ? "+" : "-"}${formatoDinero(movimiento.monto)}`
-                );
+            informacion.append(
+                crearElemento("strong", movimiento.concepto),
+                crearElemento(
+                    "small",
+                    `${movimiento.categoria} · ${String(movimiento.fecha).slice(0, 10)}`
+                )
+            );
 
-                importe.style.color =
-                    movimiento.tipo === "ingreso" ? "#15803d" : "#b91c1c";
+            const importe = crearElemento(
+                "span",
+                `${movimiento.tipo === "ingreso" ? "+" : "-"}${formatoDinero(movimiento.monto)}`
+            );
 
-                const eliminar = crearElemento("button", "Eliminar");
-                eliminar.type = "button";
-                eliminar.setAttribute(
-                    "aria-label",
-                    `Eliminar movimiento ${movimiento.concepto}`
-                );
+            importe.style.color =
+                movimiento.tipo === "ingreso" ? "#15803d" : "#b91c1c";
 
-                eliminar.addEventListener("click", () => {
-                    movimientos = movimientos.filter(
-                        (item) => item.id !== movimiento.id
-                    );
+            const eliminar = crearElemento("button", "Eliminar");
+            eliminar.type = "button";
 
-                    guardarDatos("balancea360_movimientos", movimientos);
-                    actualizarPresupuesto();
-                });
+            eliminar.addEventListener("click", async () => {
+                if (!confirm("¿Deseas eliminar este movimiento?")) return;
 
-                fila.append(informacion, importe, eliminar);
-                lista.appendChild(fila);
+                try {
+                    await solicitarAPI(`/movimientos/${movimiento._id}`, {
+                        method: "DELETE"
+                    });
+
+                    await cargarMovimientos();
+                } catch (error) {
+                    alert(error.message);
+                }
             });
+
+            fila.append(informacion, importe, eliminar);
+            lista.appendChild(fila);
+        });
     }
 
     actualizarTotales();
@@ -189,27 +224,28 @@ function actualizarTotales() {
     const totales = calcularTotales();
 
     if ($("total-ingresos")) {
-        $("total-ingresos").textContent = formatoDinero(totales.ingresos);
+        $("total-ingresos").textContent =
+            formatoDinero(totales.ingresos);
     }
 
     if ($("total-gastos")) {
-        $("total-gastos").textContent = formatoDinero(totales.gastos);
+        $("total-gastos").textContent =
+            formatoDinero(totales.gastos);
     }
 
     if ($("balance-total")) {
-        $("balance-total").textContent = formatoDinero(
-            totales.ingresos - totales.gastos
-        );
+        $("balance-total").textContent =
+            formatoDinero(totales.ingresos - totales.gastos);
     }
 }
 
-function actualizarPresupuesto() {
-    guardarDatos("balancea360_movimientos", movimientos);
-    renderizarMovimientos();
-}
-
-$("form-movimiento")?.addEventListener("submit", (evento) => {
+$("form-movimiento")?.addEventListener("submit", async (evento) => {
     evento.preventDefault();
+
+    if (!token) {
+        alert("Debes iniciar sesión antes de registrar movimientos.");
+        return;
+    }
 
     const tipo = $("tipo-movimiento")?.value;
     const concepto = $("concepto")?.value.trim();
@@ -223,29 +259,185 @@ $("form-movimiento")?.addEventListener("submit", (evento) => {
     }
 
     if (!["ingreso", "gasto"].includes(tipo)) {
-        alert("Selecciona un tipo de movimiento válido.");
+        alert("Selecciona un tipo válido.");
         return;
     }
 
-    movimientos.push({
-        id: Date.now() + Math.random(),
-        tipo,
-        concepto,
-        categoria: categoria || "General",
-        monto,
-        fecha
-    });
+    try {
+        await solicitarAPI("/movimientos", {
+            method: "POST",
+            body: JSON.stringify({
+                tipo,
+                concepto,
+                categoria: categoria || "General",
+                monto,
+                fecha
+            })
+        });
 
-    actualizarPresupuesto();
-    evento.target.reset();
+        evento.target.reset();
 
-    if ($("fecha-movimiento")) {
-        $("fecha-movimiento").value = fechaActual();
+        if ($("fecha-movimiento")) {
+            $("fecha-movimiento").value = fechaActual();
+        }
+
+        await cargarMovimientos();
+
+        alert("Movimiento guardado correctamente en MongoDB.");
+
+    } catch (error) {
+        alert(error.message);
     }
 });
 
 $("filtro-tipo")?.addEventListener("change", renderizarMovimientos);
 $("filtro-mes")?.addEventListener("change", renderizarMovimientos);
+
+// ============================================
+// REGISTRO DE USUARIOS
+// ============================================
+
+$("form-registro")?.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    const nombre = $("registro-nombre")?.value.trim();
+    const email = $("registro-email")?.value.trim();
+    const password = $("registro-password")?.value || "";
+
+    if (!nombre || !email || password.length < 8) {
+        mostrarMensaje(
+            "mensaje-registro",
+            "Completa los campos. La contraseña debe tener al menos 8 caracteres.",
+            true
+        );
+        return;
+    }
+
+    try {
+        const datos = await solicitarAPI("/auth/registro", {
+            method: "POST",
+            body: JSON.stringify({ nombre, email, password })
+        });
+
+        guardarSesion(datos);
+
+        evento.target.reset();
+
+        await cargarMovimientos();
+
+        window.location.href = "index.html#presupuesto";
+
+    } catch (error) {
+        mostrarMensaje("mensaje-registro", error.message, true);
+    }
+});
+
+// ============================================
+// INICIO DE SESIÓN
+// ============================================
+
+$("form-login")?.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    const email = $("login-email")?.value.trim();
+    const password = $("login-password")?.value || "";
+
+    if (!email || !password) {
+        mostrarMensaje("mensaje-login", "Completa tu correo y contraseña.", true);
+        return;
+    }
+
+    try {
+        const datos = await solicitarAPI("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ email, password })
+        });
+
+        guardarSesion(datos);
+
+        evento.target.reset();
+
+        await cargarMovimientos();
+
+        window.location.href = "index.html#presupuesto";
+
+    } catch (error) {
+        mostrarMensaje("mensaje-login", error.message, true);
+    }
+});
+
+// ============================================
+// SESIÓN Y ESTADO DE LA CUENTA
+// ============================================
+
+function guardarSesion(datos) {
+    token = datos.token;
+    usuarioActual = datos.usuario;
+
+    localStorage.setItem("balancea360_token", token);
+
+    actualizarEstadoCuenta();
+}
+
+function actualizarEstadoCuenta() {
+    const estado = $("estado-cuenta");
+    const formularios = document.querySelector(".access-grid");
+    const botonCerrar = $("btn-cerrar-sesion");
+    const usuarioHeader = $("usuario-header");
+    const enlaceLogin = $("enlace-login");
+    const enlaceRegistro = $("enlace-registro");
+
+    if (usuarioActual) {
+        if (estado) {
+            estado.textContent = `¡Bienvenido, ${usuarioActual.nombre}!`;
+        }
+
+        if (formularios) formularios.hidden = true;
+        if (botonCerrar) botonCerrar.hidden = false;
+
+        if (usuarioHeader) {
+            usuarioHeader.textContent = `Hola, ${usuarioActual.nombre}`;
+            usuarioHeader.hidden = false;
+        }
+
+        if (enlaceLogin) enlaceLogin.hidden = true;
+        if (enlaceRegistro) enlaceRegistro.hidden = true;
+
+    } else {
+        if (estado) {
+            estado.textContent = "No has iniciado sesión.";
+        }
+
+        if (formularios) formularios.hidden = false;
+        if (botonCerrar) botonCerrar.hidden = true;
+        if (usuarioHeader) usuarioHeader.hidden = true;
+
+        if (enlaceLogin) enlaceLogin.hidden = false;
+        if (enlaceRegistro) enlaceRegistro.hidden = false;
+    }
+}
+
+function cerrarSesionLocal() {
+    token = null;
+    usuarioActual = null;
+    movimientos = [];
+
+    localStorage.removeItem("balancea360_token");
+
+    actualizarEstadoCuenta();
+    renderizarMovimientos();
+
+    window.location.href = "index.html#presupuesto";
+}
+
+$("btn-cerrar-sesion")?.addEventListener("click", () => {
+    cerrarSesionLocal();
+    alert("Has cerrado tu sesión.");
+});
+
+$("btn-recuperar-password")?.addEventListener("click", () => {
+    alert("La recuperación de contraseña todavía no está implementada.");
+});
 
 // ============================================
 // SERVICIOS
@@ -290,13 +482,12 @@ $("form-asistente")?.addEventListener("submit", (evento) => {
     if (
         !Number.isFinite(ingresos) ||
         !Number.isFinite(gastos) ||
-        ingresos < 0 ||
-        gastos < 0 ||
-        ingresos === 0
+        ingresos <= 0 ||
+        gastos < 0
     ) {
         mostrarMensaje(
             "respuesta-asistente",
-            "Ingresa ingresos válidos mayores que cero y gastos que no sean negativos.",
+            "Ingresa ingresos mayores que cero y gastos válidos.",
             true
         );
         return;
@@ -309,135 +500,20 @@ $("form-asistente")?.addEventListener("submit", (evento) => {
     let respuesta = `Tu balance mensual es ${formatoDinero(balance)}. `;
 
     if (balance < 0) {
-        respuesta +=
-            "Tus gastos superan tus ingresos. Revisa primero los gastos no esenciales y prioriza tus obligaciones.";
+        respuesta += "Tus gastos superan tus ingresos. Revisa tus gastos no esenciales.";
     } else if (balance === 0) {
-        respuesta +=
-            "Estás utilizando todos tus ingresos. Intenta reducir algún gasto para crear un fondo de emergencia.";
+        respuesta += "Estás utilizando todos tus ingresos. Intenta reservar una parte para ahorrar.";
     } else {
         respuesta +=
             `Tus gastos representan el ${porcentajeGastos.toFixed(1)} % de tus ingresos. ` +
-            `Como punto de partida, podrías evaluar ahorrar ${formatoDinero(ahorroSugerido)} al mes, si tus obligaciones lo permiten.`;
+            `Podrías evaluar ahorrar ${formatoDinero(ahorroSugerido)} al mes.`;
     }
 
     if (objetivo) {
-        respuesta += ` Para tu objetivo "${objetivo}", define una cantidad y una fecha límite, y divide el monto necesario entre los meses disponibles.`;
+        respuesta += ` Para tu objetivo "${objetivo}", establece una cantidad y una fecha límite.`;
     }
 
     mostrarMensaje("respuesta-asistente", respuesta);
-});
-
-// ============================================
-// REGISTRO E INICIO DE SESIÓN DEMOSTRATIVOS
-// ============================================
-
-// IMPORTANTE:
-// Este ejemplo no es autenticación segura.
-// Las contraseñas no deben almacenarse en localStorage.
-// Para cuentas reales, utiliza un backend y un proveedor de
-// autenticación con almacenamiento seguro de contraseñas.
-
-$("form-registro")?.addEventListener("submit", (evento) => {
-    evento.preventDefault();
-
-    const nombre = $("registro-nombre")?.value.trim();
-    const email = $("registro-email")?.value.trim().toLowerCase();
-    const password = $("registro-password")?.value || "";
-
-    if (!nombre || !email || password.length < 8) {
-        mostrarMensaje(
-            "mensaje-registro",
-            "Completa los campos. La contraseña debe tener al menos 8 caracteres.",
-            true
-        );
-        return;
-    }
-
-    if (usuarios.some((usuario) => usuario.email === email)) {
-        mostrarMensaje(
-            "mensaje-registro",
-            "Ya existe un registro con ese correo.",
-            true
-        );
-        return;
-    }
-
-    // No se guarda la contraseña en el navegador.
-    // Se crea un perfil de demostración sin autenticación real.
-    usuarios.push({
-        id: Date.now(),
-        nombre,
-        email
-    });
-
-    guardarDatos("balancea360_usuarios", usuarios);
-
-    mostrarMensaje(
-        "mensaje-registro",
-        "Perfil de demostración creado. Para habilitar el acceso real, conecta un sistema de autenticación seguro."
-    );
-
-    evento.target.reset();
-});
-
-$("form-login")?.addEventListener("submit", (evento) => {
-    evento.preventDefault();
-
-    const email = $("login-email")?.value.trim().toLowerCase();
-
-    if (!email) {
-        mostrarMensaje("mensaje-login", "Ingresa tu correo.", true);
-        return;
-    }
-
-    const usuario = usuarios.find((item) => item.email === email);
-
-    if (!usuario) {
-        mostrarMensaje(
-            "mensaje-login",
-            "No encontramos ese perfil de demostración. Regístrate primero.",
-            true
-        );
-        return;
-    }
-
-    usuarioActual = { nombre: usuario.nombre, email: usuario.email };
-    guardarDatos("balancea360_sesion", usuarioActual);
-    actualizarEstadoCuenta();
-
-    mostrarMensaje(
-        "mensaje-login",
-        `Hola, ${usuario.nombre}. Entraste en modo demostración.`
-    );
-
-    evento.target.reset();
-});
-
-function actualizarEstadoCuenta() {
-    const estado = $("estado-cuenta");
-    if (!estado) return;
-
-    estado.textContent = usuarioActual
-        ? `Sesión de demostración: ${usuarioActual.nombre} (${usuarioActual.email})`
-        : "No has iniciado sesión.";
-}
-
-$("btn-cerrar-sesion")?.addEventListener("click", () => {
-    usuarioActual = null;
-
-    try {
-        localStorage.removeItem("balancea360_sesion");
-    } catch (error) {
-        console.error("No se pudo cerrar la sesión local.", error);
-    }
-
-    actualizarEstadoCuenta();
-});
-
-$("btn-recuperar-password")?.addEventListener("click", () => {
-    alert(
-        "La recuperación de contraseña estará disponible cuando se conecte un sistema de autenticación real."
-    );
 });
 
 // ============================================
@@ -453,11 +529,7 @@ $("form-contacto")?.addEventListener("submit", (evento) => {
     const mensaje = $("contacto-mensaje")?.value.trim();
 
     if (!nombre || !email || !asunto || !mensaje) {
-        mostrarMensaje(
-            "mensaje-contacto",
-            "Completa todos los campos del formulario.",
-            true
-        );
+        mostrarMensaje("mensaje-contacto", "Completa todos los campos.", true);
         return;
     }
 
@@ -470,11 +542,14 @@ $("form-contacto")?.addEventListener("submit", (evento) => {
         fecha: new Date().toISOString()
     });
 
-    if (!guardarDatos("balancea360_contactos", contactos)) return;
+    localStorage.setItem(
+        "balancea360_contactos",
+        JSON.stringify(contactos)
+    );
 
     mostrarMensaje(
         "mensaje-contacto",
-        "Mensaje guardado en este navegador. Todavía no se ha enviado por correo."
+        "Mensaje guardado en este navegador. Todavía no se ha enviado."
     );
 
     evento.target.reset();
@@ -482,7 +557,7 @@ $("form-contacto")?.addEventListener("submit", (evento) => {
 });
 
 // ============================================
-// PANEL ADMINISTRATIVO DE DEMOSTRACIÓN
+// ADMINISTRACIÓN DEMOSTRATIVA
 // ============================================
 
 function renderizarAdministracion() {
@@ -523,19 +598,51 @@ function renderizarAdministracion() {
 }
 
 // ============================================
+// COMPROBAR SESIÓN AL ABRIR LA PÁGINA
+// ============================================
+
+async function comprobarSesion() {
+    if (!token) {
+        usuarioActual = null;
+        movimientos = [];
+
+        actualizarEstadoCuenta();
+        renderizarMovimientos();
+        return;
+    }
+
+    try {
+        const datos = await solicitarAPI("/auth/me");
+        usuarioActual = datos.usuario;
+
+        actualizarEstadoCuenta();
+        await cargarMovimientos();
+
+    } catch (error) {
+        token = null;
+        usuarioActual = null;
+        movimientos = [];
+
+        localStorage.removeItem("balancea360_token");
+
+        actualizarEstadoCuenta();
+        renderizarMovimientos();
+    }
+}
+
+// ============================================
 // INICIALIZACIÓN
 // ============================================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     if ($("fecha-movimiento")) {
         $("fecha-movimiento").value = fechaActual();
     }
 
-    renderizarMovimientos();
     renderizarServicios();
-    actualizarEstadoCuenta();
     renderizarAdministracion();
+
+    await comprobarSesion();
+
+    actualizarTotales();
 });
-module.export = {
-    actualizarEstadoCuenta, actualizarPresupuesto, actualizarTotales, calcularTotales, contactos, crearElemento, fechaActual, formatoDinero, guardarDatos, leerDatos
-}
